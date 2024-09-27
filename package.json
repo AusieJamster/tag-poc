@@ -1,0 +1,24 @@
+{
+  "name": "tag-poc",
+  "version": "1.0.0",
+  "main": "index.ts",
+  "scripts": {
+    "dev": "ts-node index.ts",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "docker-gremlin:build": "docker build -f Dockerfile -t gremlin-server:3.7.2 --build-arg tinkerpopVersion=3.7.2 .",
+    "docker-gremlin:run": "docker run -d -p 8182:8182 --name gremlin-server gremlin-server:3.7.2"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@types/gremlin": "^3.6.7",
+    "@types/node": "^22.7.3",
+    "@types/uuid": "^10.0.0",
+    "typescript": "^5.6.2"
+  },
+  "dependencies": {
+    "gremlin": "^3.7.2",
+    "uuid": "^10.0.0"
+  }
+}
