@@ -1,5 +1,4 @@
 import gremlin from "gremlin";
-import { v4 as uuidv4 } from "uuid";
 import { ConsoleName } from "./consoleName";
 
 type TGraphSource =
@@ -20,8 +19,8 @@ class GremlinPoc {
       return;
     }
 
-    const personId = uuidv4();
-    const movieId = uuidv4();
+    const personId = uuidv1();
+    const movieId = uuidv1();
     try {
       await this.createPersonVertex(personId);
       await this.createMovieVertex(movieId);
@@ -37,14 +36,14 @@ class GremlinPoc {
   @ConsoleName()
   async connect() {
     const conn = new gremlin.driver.DriverRemoteConnection(
-      "wss://localhost:8182"
+      "ws://localhost:8182/gremlin"
     );
     const { traversal } = gremlin.process.AnonymousTraversalSource;
     return traversal().withRemote(conn);
   }
 
   @ConsoleName()
-  async createPersonVertex(personId: string) {
+  async createPersonVertex(personId: number) {
     const {
       cardinality: { single },
       t,
@@ -60,7 +59,7 @@ class GremlinPoc {
   }
 
   @ConsoleName()
-  async createMovieVertex(movieId: string) {
+  async createMovieVertex(movieId: number) {
     const {
       cardinality: { single },
       t,
@@ -74,7 +73,7 @@ class GremlinPoc {
   }
 
   @ConsoleName()
-  async createEdge(personId: string, movieId: string) {
+  async createEdge(personId: number, movieId: number) {
     const { statics: __ } = gremlin.process;
 
     return this.g
@@ -94,14 +93,14 @@ class GremlinPoc {
     return (
       this.g
         ?.addV("person")
-        .property(t.id, uuidv4())
+        .property(t.id, uuidv1())
         .property("email", "user@domain.com")
         .property(single, "firstname", "firstname")
         .property(single, "lastname", "lastname")
         .as("user")
         // ---
         .addV("movie")
-        .property(t.id, uuidv4())
+        .property(t.id, uuidv1())
         .property(single, "title", "movietitle")
         .as("movie")
         // ---
@@ -123,17 +122,15 @@ class GremlinPoc {
       .limit(10)
       .toList();
 
-    console.log("\n");
-    console.log("id|label|title");
-
-    return data?.map(
-      (item: any) =>
-        item.get(t.id) + "|" + item.get(t.label) + "|" + item.get("title")
-    );
+    return data?.map((item: any) => ({
+      id: item.get(t.id),
+      label: item.get(t.label),
+      title: item.get("title").join("|"),
+    }));
   }
 
   @ConsoleName()
-  async readConnections(personId: string) {
+  async readConnections(personId: number) {
     const { statics: __ } = gremlin.process;
 
     const getPersonPromise = await this.g
@@ -143,9 +140,6 @@ class GremlinPoc {
       .by(__.out("watched").valueMap("title").fold())
       .limit(10)
       .toList();
-    console.log("\n");
-    console.log("Email".padEnd(20, " ") + "Title".padEnd(20, " "));
-    console.log("".padEnd(50, "_"));
 
     return getPersonPromise?.map(
       (item: any) =>
@@ -156,3 +150,7 @@ class GremlinPoc {
 }
 
 new GremlinPoc();
+
+function uuidv1() {
+  return Math.ceil(Math.random() * 10000);
+}
